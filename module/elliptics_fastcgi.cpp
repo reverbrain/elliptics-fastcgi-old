@@ -329,14 +329,18 @@ EllipticsProxy::onLoad() {
 	chunk_size_ = config->asInt(path + "/dnet/chunk_size", 0);
 	if (chunk_size_ < 0) chunk_size_ = 0;
 
-	use_cookie_ = (config->asString(path + "/dnet/cookie/name", "") != "");
+	names.clear();
+	config->subKeys(path + "/dnet/cookie/sign", names);
+	use_cookie_ = !names.empty();
 
 	if (use_cookie_) {
-		cookie_name_ = config->asString(path + "/dnet/cookie/name");
-		cookie_key_ = config->asString(path + "/dnet/cookie/key");
-		cookie_path_ = config->asString(path + "/dnet/cookie/path");
-		cookie_domain_ = config->asString(path + "/dnet/cookie/domain");
-		cookie_expires_ = config->asInt(path + "/dnet/cookie/expires");
+		cookie_name_ = config->asString(path + "/dnet/cookie/name", "");
+		if (!cookie_name_.empty()) {
+			cookie_key_ = config->asString(path + "/dnet/cookie/key");
+			cookie_path_ = config->asString(path + "/dnet/cookie/path");
+			cookie_domain_ = config->asString(path + "/dnet/cookie/domain");
+			cookie_expires_ = config->asInt(path + "/dnet/cookie/expires");
+		}
 
 		names.clear();
 		config->subKeys(path + "/dnet/cookie/sign", names);
@@ -685,7 +689,7 @@ EllipticsProxy::downloadInfoHandler(fastcgi::Request *request) {
 			break;
 		}
 
-		std::pair<std::string, time_t> s = cookie.sign_key.size() ? secret(request) : std::make_pair(std::string(), time(NULL));
+		std::pair<std::string, time_t> s = (cookie.sign_key.size() && !cookie_name_.empty()) ? secret(request) : std::make_pair(std::string(), time(NULL));
 
 		std::ostringstream ostr;
 		ostr << cookie.sign_key << std::hex << s.second << s.first << path;
