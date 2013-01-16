@@ -54,7 +54,7 @@ enum dnet_metabase_type {
 
 static inline char*
 file_backend_get_dir(const unsigned char *id, uint64_t bit_num, char *dst) {
-	char *res = dnet_dump_id_len_raw(id, (bit_num + 7) / 8, dst);
+	char *res = dnet_dump_id_len_raw(id, ALIGN(bit_num, 8) / 8, dst);
 
 	if (res) {
 		res[bit_num / 4] = '\0';
@@ -585,12 +585,17 @@ EllipticsProxy::downloadInfoHandler(fastcgi::Request *request) {
 
 	try {
 		sess.set_groups(groups);
-		ioremap::elliptics::lookup_result l = sess.lookup(filename);
+		std::string l = sess.lookup(filename);
 
 		std::string result = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
 
-		struct dnet_addr_attr *a = l->address_attribute();
-		struct dnet_file_info *info = l->file_info();
+		const void *data = l.data();
+
+		struct dnet_addr *addr = (struct dnet_addr *)data;
+		struct dnet_cmd *cmd = (struct dnet_cmd *)(addr + 1);
+		struct dnet_addr_attr *a = (struct dnet_addr_attr *)(cmd + 1);
+		struct dnet_file_info *info = (struct dnet_file_info *)(a + 1);
+		dnet_convert_file_info(info);
 
 		char hbuf[NI_MAXHOST];
 		memset(hbuf, 0, NI_MAXHOST);
@@ -657,7 +662,7 @@ EllipticsProxy::downloadInfoHandler(fastcgi::Request *request) {
 
 
 		if (eblob_style_path_) {
-			path = l->file_path();
+			path = std::string((char *)(info + 1));
 			path = path.substr(path.find_last_of("/\\") + 1);
 			path = "/" + boost::lexical_cast<std::string>(port - base_port_) + '/' 
 				+ path + ":" + boost::lexical_cast<std::string>(info->offset)
@@ -780,7 +785,7 @@ EllipticsProxy::rangeHandler(fastcgi::Request *request) {
 
 		for (size_t i = 0; i < groups.size(); ++i) {
 			try {
-				ret = sess.read_data_range_raw(io, groups[i]);
+				ret = sess.read_data_range(io, groups[i]);
 				if (ret.size())
 					break;
 			} catch (...) {
@@ -873,7 +878,7 @@ EllipticsProxy::rangeDeleteHandler(fastcgi::Request *request) {
 		io.flags = ioflags;
 		io.type = column;
 
-		ioremap::elliptics::remove_range_result ret;
+		std::vector<struct dnet_io_attr> ret;
 
 		for (size_t i = 0; i < groups.size(); ++i) {
 			try {
@@ -894,7 +899,7 @@ EllipticsProxy::rangeDeleteHandler(fastcgi::Request *request) {
 		int removed = 0;
 
 		for (size_t i = 0; i < ret.size(); ++i) {
-			removed += ret[i].io_attribute()->num;
+			removed += ret[i].num;
 		}
 
 		result = boost::lexical_cast<std::string>(removed);
@@ -964,7 +969,7 @@ EllipticsProxy::getHandler(fastcgi::Request *request) {
 		sess.set_cflags(cflags);
 		sess.set_ioflags(ioflags);
 
-		ioremap::elliptics::data_pointer result;
+		std::string result;
 
 		if (request->hasArg("id")) {
 			struct dnet_id id;
@@ -972,32 +977,36 @@ EllipticsProxy::getHandler(fastcgi::Request *request) {
 			dnet_parse_numeric_id(request->getArg("id"), id);
 			id.type = column;
 			if (latest)
-				result = sess.read_latest(id, offset, size)->file();
+				result = sess.read_latest(id, offset, size);
 			else
-				result = sess.read_data(id, offset, size)->file();
+				result = sess.read_data_wait(id, offset, size);
 		} else {
 			if (latest)
-				result = sess.read_latest(ioremap::elliptics::key(filename, column), offset, size)->file();
+				result = sess.read_latest(ioremap::elliptics::key(filename, column), offset, size);
 			else
-				result = sess.read_data(ioremap::elliptics::key(filename, column), offset, size)->file();
+				result = sess.read_data_wait(ioremap::elliptics::key(filename, column), offset, size);
 		}
 
 		uint64_t ts = 0;
 		if (request->hasArg("embed") || request->hasArg("embed_timestamp")) {
-			while (result.size()) {
-				if (size < sizeof(struct dnet_common_embed)) {
-					std::ostringstream str;
-					str << filename << ": offset: " << result.offset() << ", size: " << result.size() << ": invalid size";
-					throw std::runtime_error(str.str());
-				}
+			size_t size = result.size();
+			size_t offset = 0;
 
-				struct dnet_common_embed *e = result.data<struct dnet_common_embed>();
+			while (size) {
+				struct dnet_common_embed *e = (struct dnet_common_embed *)(result.data() + offset);
 
 				dnet_common_convert_embedded(e);
 
-				result = result.skip<struct dnet_common_embed>();
+				if (size < sizeof(struct dnet_common_embed)) {
+					std::ostringstream str;
+					str << filename << ": offset: " << offset << ", size: " << size << ": invalid size";
+					throw std::runtime_error(str.str());
+				}
 
-				if (result.size() < e->size + sizeof (struct dnet_common_embed)) {
+				offset += sizeof(struct dnet_common_embed);
+				size -= sizeof(struct dnet_common_embed);
+
+				if (size < e->size + sizeof (struct dnet_common_embed)) {
 					break;
 				}
 
@@ -1008,6 +1017,7 @@ EllipticsProxy::getHandler(fastcgi::Request *request) {
 				}
 
 				if (e->type == DNET_FCGI_EMBED_DATA) {
+					size = e->size;
 					break;
 				}
 
@@ -1027,8 +1037,10 @@ EllipticsProxy::getHandler(fastcgi::Request *request) {
 					}
 				}
 
-				result = result.skip(e->size);
+				offset += e->size;
+				size -= e->size;
 			}
+			result = result.substr(offset, std::string::npos);
 		}
 
 		char ts_str[128];
@@ -1053,9 +1065,9 @@ EllipticsProxy::getHandler(fastcgi::Request *request) {
 
 		request->setStatus(200);
 		request->setContentType(content_type);
-		request->setHeader("Content-Length", boost::lexical_cast<std::string>(result.size()));
+		request->setHeader("Content-Length", boost::lexical_cast<std::string>(result.length()));
 		request->setHeader("Last-Modified", ts_str);
-		request->write(result.data<char>(), result.size());
+		request->write(result.c_str(), result.size());
 	}
 	catch (const std::exception &e) {
 		log()->error("can not locate file %s %s", filename.c_str(), e.what());
@@ -1074,24 +1086,33 @@ EllipticsProxy::statLogHandler(fastcgi::Request *request) {
 	result += "<data>\n";
 
 	ioremap::elliptics::session sess(*elliptics_node_);
-	const ioremap::elliptics::stat_result ret = sess.stat_log();
+	std::string ret = sess.stat_log();
 
 	float la[3];
-	char buf[512];
+	const void *data = ret.data();
+	int size = ret.size();
 	char id_str[DNET_ID_SIZE * 2 + 1];
 	char addr_str[128];
 
-	for (size_t i = 0; i < ret.size(); ++i) {
-		const ioremap::elliptics::stat_result_entry &data = ret[i];
-		struct dnet_addr *addr = data.address();
-		struct dnet_cmd *cmd = data.command();
-		struct dnet_stat *st = data.statistics();
+	while (size) {
+		struct dnet_addr *addr = (struct dnet_addr *)data;
+		struct dnet_cmd *cmd = (struct dnet_cmd *)(addr + 1);
+		if (cmd->size != sizeof (struct dnet_stat)) {
+			size -= cmd->size + sizeof (struct dnet_addr) + sizeof (struct dnet_cmd);
+			data = (char *)data + cmd->size + sizeof (struct dnet_addr) + sizeof (struct dnet_cmd);
+			continue;
+		}
+		struct dnet_stat *st = (struct dnet_stat *)(cmd+ 1);
+
+		dnet_convert_stat(st);
 
 		la[0] = (float)st->la[0] / 100.0;
 		la[1] = (float)st->la[1] / 100.0;
 		la[2] = (float)st->la[2] / 100.0;
 
-		snprintf(buf, sizeof(buf), "<stat addr=\"%s\" id=\"%s\"><la>%.2f %.2f %.2f</la>"
+		char buf[512];
+
+		snprintf(buf, sizeof (buf), "<stat addr=\"%s\" id=\"%s\"><la>%.2f %.2f %.2f</la>"
 			"<memtotal>%llu KB</memtotal><memfree>%llu KB</memfree><memcached>%llu KB</memcached>"
 			"<storage_size>%llu MB</storage_size><available_size>%llu MB</available_size>"
 			"<files>%llu</files><fsid>0x%llx</fsid></stat>",
@@ -1106,6 +1127,10 @@ EllipticsProxy::statLogHandler(fastcgi::Request *request) {
 			(unsigned long long)st->files, (unsigned long long)st->fsid);
 
 		result += buf;
+
+		int sz = cmd->size + sizeof (struct dnet_addr) + sizeof (struct dnet_cmd);
+		size -= sz;
+		data = (char *)data + sz;
 	}
 
 	result += "</data>";
@@ -1275,7 +1300,7 @@ EllipticsProxy::uploadHandler(fastcgi::Request *request) {
 		}
 
 		int result = 0;
-		ioremap::elliptics::write_result lookup;
+		std::string lookup;
 
 		id.type = column;
 
@@ -1289,7 +1314,7 @@ EllipticsProxy::uploadHandler(fastcgi::Request *request) {
 		try {
 			if (request->hasArg("id")) {
 				dnet_parse_numeric_id(request->getArg("id"), id);
-				lookup = sess.write_data(id, content, offset);
+				lookup = sess.write_data_wait(id, content, offset);
 			} else {
 				sess.transform(filename, id);
 
@@ -1304,7 +1329,7 @@ EllipticsProxy::uploadHandler(fastcgi::Request *request) {
 					if (chunk_offset) {
 						lookup = sess.write_prepare(ioremap::elliptics::key(filename, column), content, offset, total_size);
 					} else {
-						lookup = sess.write_data(ioremap::elliptics::key(filename, column), content, offset);
+						lookup = sess.write_data_wait(ioremap::elliptics::key(filename, column), content, offset);
 					}
 				}
 			}
@@ -1375,13 +1400,19 @@ EllipticsProxy::uploadHandler(fastcgi::Request *request) {
 
 		while (!written || written < replication_count) {
 			/* parse lookup response */
-			for (size_t i = 0; i < lookup.size(); ++i) {
-				ioremap::elliptics::lookup_result_entry entry = lookup[i];
+			long size = lookup.size();
+			char *data = (char *)lookup.data();
+			long min_size = sizeof(struct dnet_cmd) +
+					sizeof(struct dnet_addr) +
+					sizeof(struct dnet_addr_attr) +
+					sizeof(struct dnet_file_info);
 
-				struct dnet_addr *addr = entry.address();
-				struct dnet_cmd *cmd = entry.command();
+			while (size > min_size) {
+				struct dnet_addr *addr = (struct dnet_addr *)data;
+				struct dnet_cmd *cmd = (struct dnet_cmd *)(addr + 1);
+				struct dnet_addr_attr *a = (struct dnet_addr_attr *)(cmd + 1);
 
-				struct dnet_file_info *info = entry.file_info();
+				struct dnet_file_info *info = (struct dnet_file_info *)(a + 1);
 				dnet_convert_file_info(info);
 
 				char addr_dst[512];
@@ -1397,10 +1428,13 @@ EllipticsProxy::uploadHandler(fastcgi::Request *request) {
 				ostr << "<complete addr=\"" << addr_dst << "\" path=\"" <<
 					(char *)(info + 1) << "\" group=\"" << cmd->id.group_id <<
 					"\" status=\"" << cmd->status << "\"/>\n";
+
+				data += min_size + info->flen;
+				size -= min_size + info->flen;
 			}
 
 			/* clear lookup response, so that we could overwrite it with the new one if needed */
-			lookup = ioremap::elliptics::write_result();
+			lookup.clear();
 			log()->debug("written: %d", written);
 
 			if (temp_groups.size() == 0 || (written && written >= replication_count) || use_metabase ) {
@@ -1417,7 +1451,7 @@ EllipticsProxy::uploadHandler(fastcgi::Request *request) {
 					if (chunked) {
 						lookup = sess.write_plain(ioremap::elliptics::key(filename, column), content, offset);
 					} else {
-						lookup = sess.write_data(ioremap::elliptics::key(filename, column), content, offset);
+						lookup = sess.write_data_wait(ioremap::elliptics::key(filename, column), content, offset);
 					}
 				
 					temp_groups.erase(it);
@@ -1641,7 +1675,7 @@ EllipticsProxy::bulkReadHandler(fastcgi::Request *request) {
 
 		sess.set_groups(groups);
 
-		std::string result;
+		std::vector<std::string> ret;
 
 		if (key_type.compare("name") == 0) {
 			// body of POST request contains lines with file names
@@ -1667,24 +1701,23 @@ EllipticsProxy::bulkReadHandler(fastcgi::Request *request) {
 			}
 
 			// Finally, call bulk_read method
-			ioremap::elliptics::bulk_read_result ret = sess.bulk_read(keys);
-			for (size_t i = 0; i < ret.size(); ++i) {
-				const ioremap::elliptics::read_result_entry entry = ret[i];
-				const uint64_t size = entry.file().size();
-				result.append(reinterpret_cast<char*>(entry.io_attribute()->id), DNET_ID_SIZE);
-				result.append(reinterpret_cast<const char*>(&size), sizeof(uint64_t));
-				result.append(reinterpret_cast<char*>(entry.file().data()), size);
-			}
+			ret = sess.bulk_read(keys);
 		} else {
 			std::ostringstream str;
 			str << "BULK_READ failed: unsupported key type " << key_type;
 			throw std::runtime_error(str.str());
 		}
 
-		if (result.size() == 0) {
+		if (ret.size() == 0) {
 			std::ostringstream str;
 			str << "BULK_READ failed: zero size reply";
 			throw std::runtime_error(str.str());
+		}
+
+		std::string result;
+
+		for (size_t i = 0; i < ret.size(); ++i) {
+			result += ret[i];
 		}
 
 		request->setStatus(200);
@@ -1745,7 +1778,7 @@ EllipticsProxy::bulkWriteHandler(fastcgi::Request *request) {
 
 		sess.set_groups(groups);
 
-		ioremap::elliptics::write_result lookup;
+		std::string lookup;
 		std::ostringstream ostr;
 		std::map<std::string, struct bulk_file_info> results;
 
@@ -1822,18 +1855,24 @@ EllipticsProxy::bulkWriteHandler(fastcgi::Request *request) {
 
 		ostr << "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
 
+		long size = lookup.size();
+		char *data = (char *)lookup.data();
+		long min_size = sizeof(struct dnet_cmd) +
+				sizeof(struct dnet_addr) +
+				sizeof(struct dnet_addr_attr) +
+				sizeof(struct dnet_file_info);
+
 		char addr_dst[512];
 		char id_str[2 * DNET_ID_SIZE + 1];
 		struct bulk_file_info_single file_info;
 		std::string id;
 
-		for (size_t i = 0; i < lookup.size(); ++i) {
-			ioremap::elliptics::write_result_entry entry = lookup[i];
+		while (size > min_size) {
+			struct dnet_addr *addr = (struct dnet_addr *)data;
+			struct dnet_cmd *cmd = (struct dnet_cmd *)(addr + 1);
+			struct dnet_addr_attr *a = (struct dnet_addr_attr *)(cmd + 1);
 
-			struct dnet_addr *addr = entry.address();
-			struct dnet_cmd *cmd = entry.command();
-
-			struct dnet_file_info *info = entry.file_info();
+			struct dnet_file_info *info = (struct dnet_file_info *)(a + 1);
 			dnet_convert_file_info(info);
 
 			dnet_server_convert_dnet_addr_raw(addr, addr_dst, sizeof (addr_dst) - 1);
@@ -1842,12 +1881,17 @@ EllipticsProxy::bulkWriteHandler(fastcgi::Request *request) {
 			id.assign(id_str);
 
 			file_info.addr.assign(addr_dst);
-			file_info.path.assign(entry.file_path());
+			file_info.path.assign((char *)(info + 1));
 			file_info.group = cmd->id.group_id;
 			file_info.status = cmd->status;
 
 			results[id].groups.push_back(file_info);
+
+
+			data += min_size + info->flen;
+			size -= min_size + info->flen;
 		}
+		lookup.clear();
 
 		for (std::map<std::string, struct bulk_file_info>::iterator it = results.begin(); it != results.end(); it++) {
 			ostr << "<post obj=\"\" id=\"" << it->first <<
