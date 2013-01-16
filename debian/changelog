@@ -1,3 +1,9 @@
+elliptics-fastcgi (1.4-4-ell2.20) unstable; urgency=low
+
+  * Do not use cookie for signing if cookie name is empty
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Wed, 16 Jan 2013 15:23:13 +0400
+
 elliptics-fastcgi (1.4-3-ell2.20) unstable; urgency=low
 
   * Do not crash if cookie is empty
