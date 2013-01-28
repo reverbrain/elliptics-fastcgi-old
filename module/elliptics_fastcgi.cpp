@@ -623,38 +623,44 @@ EllipticsProxy::downloadInfoHandler(fastcgi::Request *request) {
 
 #ifdef HAVE_REGIONAL
 		if (NULL != regional_module_) {
-			region = regional_module_->getRegion(ip);
-			std::vector<std::string> hosts = regional_module_->getHosts(ip);
-			if (hosts.size() != 0) {
-				char f_str[2];
-				strncpy(f_str, id + sizeof (id) - 3, sizeof (f_str));
-				unsigned int f;
-				sscanf(f_str, "%x", &f);
-				size_t n = f % hosts.size();
-				std::swap(hosts[n], hosts[0]);
+			try {
+				region = regional_module_->getRegion(ip);
+				std::vector<std::string> hosts = regional_module_->getHosts(ip);
+				if (hosts.size() != 0) {
+					char f_str[2];
+					strncpy(f_str, id + sizeof (id) - 3, sizeof (f_str));
+					unsigned int f;
+					sscanf(f_str, "%x", &f);
+					size_t n = f % hosts.size();
+					std::swap(hosts[n], hosts[0]);
 
-				for (std::size_t i = 0; i < std::min(hosts.size(), (size_t)2); ++i) {
-					std::string index = boost::lexical_cast<std::string>(i);
-					std::string host = std::string(hbuf) + '.' + hosts[i];
+					for (std::size_t i = 0; i < std::min(hosts.size(), (size_t)2); ++i) {
+						std::string index = boost::lexical_cast<std::string>(i);
+						std::string host = std::string(hbuf) + '.' + hosts[i];
 
-					try {
-						std::stringstream tmp;
+						try {
+							std::stringstream tmp;
 
-						std::string url = host + "/ping";
-						yandex::common::curl_wrapper<yandex::common::boost_threading_traits> curl(url);
-						curl.header("Expect", "");
-						curl.timeout(1);
-						long status = curl.perform(tmp);
+							std::string url = host + "/ping";
+							yandex::common::curl_wrapper<yandex::common::boost_threading_traits> curl(url);
+							curl.header("Expect", "");
+							curl.timeout(1);
+							long status = curl.perform(tmp);
 
-						if (200 != status) {
-							throw std::runtime_error("non 200 status from regional proxy");
+							if (200 != status) {
+								throw std::runtime_error("non 200 status from regional proxy");
+							}
+
+							result += "<regional-host>" + host + "</regional-host>";
 						}
-
-						result += "<regional-host>" + host + "</regional-host>";
-					}
-					catch (...) {
+						catch (...) {
+						}
 					}
 				}
+			} catch (const std::exception &e) {
+				log()->error("can not get user region for file %s: %s", filename.c_str(), e.what());
+			} catch (...) {
+				log()->error("can not get user region for file %s", filename.c_str());
 			}
 		}
 #endif /* HAVE_REGIONAL */
