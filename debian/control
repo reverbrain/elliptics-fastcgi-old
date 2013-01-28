@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 5),
  elliptics-dev (>= 2.20),
  elliptics-client (>= 2.20),
  libgeobase3-dev,
- elliptics-regional-module (>= 1.1),
+ elliptics-regional-module (>= 1.1-1),
  pkg-config,
  libcurl4-openssl-dev,
  autoconf (>= 2.52), automake1.9, libtool, libxml2-dev, libboost-thread-dev
