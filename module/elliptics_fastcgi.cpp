@@ -663,9 +663,9 @@ EllipticsProxy::downloadInfoHandler(fastcgi::Request *request) {
 					}
 				}
 			} catch (const std::exception &e) {
-				log()->error("can not get user region for file %s: %s", filename.c_str(), e.what());
+				log()->debug("can not get user region for file %s: %s", filename.c_str(), e.what());
 			} catch (...) {
-				log()->error("can not get user region for file %s", filename.c_str());
+				log()->debug("can not get user region for file %s", filename.c_str());
 			}
 		}
 #endif /* HAVE_REGIONAL */
