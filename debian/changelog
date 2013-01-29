@@ -1,3 +1,9 @@
+elliptics-fastcgi (1.4-7-ell2.20) unstable; urgency=low
+
+  * Print geobase exceptions as debug messages
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Tue, 29 Jan 2013 16:12:32 +0400
+
 elliptics-fastcgi (1.4-6-ell2.20) unstable; urgency=low
 
   * Catch exception from regional module
