@@ -1,3 +1,9 @@
+elliptics-fastcgi (1.4-7-ell2.21) unstable; urgency=low
+
+  * Elliptics 2.21 support
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Mon, 04 Feb 2013 18:45:01 +0400
+
 elliptics-fastcgi (1.4-7-ell2.20) unstable; urgency=low
 
   * Print geobase exceptions as debug messages
