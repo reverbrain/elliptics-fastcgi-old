@@ -1,3 +1,9 @@
+elliptics-fastcgi (1.4-8-ell2.21) unstable; urgency=low
+
+  * Depend on elliptics-regional-module=1.1-3, libgeobase3 = 3.1-28
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Mon, 04 Feb 2013 19:37:58 +0400
+
 elliptics-fastcgi (1.4-7-ell2.21) unstable; urgency=low
 
   * Elliptics 2.21 support
