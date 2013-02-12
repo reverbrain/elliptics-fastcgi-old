@@ -1,3 +1,9 @@
+elliptics-fastcgi (1.4-10-ell2.21) unstable; urgency=low
+
+  * Depend on libdeobase3 3.1-30
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Tue, 12 Feb 2013 20:37:48 +0400
+
 elliptics-fastcgi (1.4-9-ell2.21) unstable; urgency=low
 
   * Depend on elliptics-regional-module=1.1-4, libgeobase3 = 3.1-29
