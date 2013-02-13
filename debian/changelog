@@ -1,3 +1,9 @@
+elliptics-fastcgi (1.4-11-ell2.21) unstable; urgency=low
+
+  * Fixed typo in embed_timestamp processing
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Wed, 13 Feb 2013 15:19:01 +0400
+
 elliptics-fastcgi (1.4-10-ell2.21) unstable; urgency=low
 
   * Depend on libdeobase3 3.1-30

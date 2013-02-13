@@ -995,7 +995,7 @@ EllipticsProxy::getHandler(fastcgi::Request *request) {
 		uint64_t ts = 0;
 		if (request->hasArg("embed") || request->hasArg("embed_timestamp")) {
 			while (result.size()) {
-				if (size < sizeof(struct dnet_common_embed)) {
+				if (result.size() < sizeof(struct dnet_common_embed)) {
 					std::ostringstream str;
 					str << filename << ": offset: " << result.offset() << ", size: " << result.size() << ": invalid size";
 					throw std::runtime_error(str.str());
