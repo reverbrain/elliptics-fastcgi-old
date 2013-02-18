@@ -1007,7 +1007,7 @@ EllipticsProxy::getHandler(fastcgi::Request *request) {
 
 				result = result.skip<struct dnet_common_embed>();
 
-				if (result.size() < e->size + sizeof (struct dnet_common_embed)) {
+				if (result.size() < e->size) {
 					break;
 				}
 
