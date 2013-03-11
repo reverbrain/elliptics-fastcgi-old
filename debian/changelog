@@ -1,3 +1,11 @@
+elliptics-fastcgi (1.4-12-ell2.21) unstable; urgency=low
+
+  * Use timestamp with milliceconds in signature generation
+  * Use new regional module
+  * Force use of elliptics version 2.21
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Mon, 11 Mar 2013 18:22:35 +0400
+
 elliptics-fastcgi (1.4-11-ell2.21) unstable; urgency=low
 
   * Fixed typo in embed_timestamp processing
