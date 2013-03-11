@@ -113,7 +113,7 @@ private:
 	static size_t paramsNum(Tokenizer &tok);
 	static std::string md5(const std::string &source);
 
-	std::pair<std::string, time_t> secret(fastcgi::Request *request) const;
+	std::pair<std::string, uint64_t> secret(fastcgi::Request *request) const;
 
 #ifdef HAVE_METABASE
 	std::vector<int> getMetabaseGroups(fastcgi::Request *request, size_t count, struct dnet_id &id);
