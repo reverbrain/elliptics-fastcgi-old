@@ -107,8 +107,18 @@ EllipticsProxy::EllipticsProxy(fastcgi::ComponentContext *context) :
 EllipticsProxy::~EllipticsProxy() {
 }
 
-std::pair<std::string, time_t>
+std::pair<std::string, uint64_t>
 EllipticsProxy::secret(fastcgi::Request *request) const {
+
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+
+        uint64_t timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+
+	if (cookie_name_.empty()) {
+                return std::make_pair(std::string(), timestamp);
+        }
+
 	if (request->hasCookie(cookie_name_)) {
 		std::string cookie = request->getCookie(cookie_name_);
 
@@ -117,7 +127,7 @@ EllipticsProxy::secret(fastcgi::Request *request) const {
 			Tokenizer tok(cookie, sep);
 
 			if (paramsNum(tok) == 2) {
-				return std::make_pair(request->getCookie(cookie_name_), time(NULL));
+				return std::make_pair(request->getCookie(cookie_name_), timestamp);
 			}
 		}
 	}
@@ -142,7 +152,6 @@ EllipticsProxy::secret(fastcgi::Request *request) const {
 		throw std::runtime_error(ostr.str());
 	}
 
-	time_t timestamp = time(NULL);
 	std::ostringstream ostr;
 	ostr << cookie_key_ << std::hex << rnd << std::hex << timestamp;
 
@@ -150,7 +159,7 @@ EllipticsProxy::secret(fastcgi::Request *request) const {
 	snprintf(cookie, sizeof (cookie), "%x.%lx.%s", rnd, timestamp, md5(ostr.str()).c_str());
 
 	fastcgi::Cookie c(cookie_name_, cookie);
-	c.expires(timestamp + cookie_expires_);
+	c.expires(static_cast<time_t>(timestamp / 1000) + cookie_expires_);
 	c.path(cookie_path_);
 	c.domain(cookie_domain_);
 
@@ -690,7 +699,7 @@ EllipticsProxy::downloadInfoHandler(fastcgi::Request *request) {
 			break;
 		}
 
-		std::pair<std::string, time_t> s = (cookie.sign_key.size() && !cookie_name_.empty()) ? secret(request) : std::make_pair(std::string(), time(NULL));
+		std::pair<std::string, uint64_t> s = secret(request);
 
 		std::ostringstream ostr;
 		ostr << cookie.sign_key << std::hex << s.second << s.first << path;
