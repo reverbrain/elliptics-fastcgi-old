@@ -1,3 +1,9 @@
+elliptics-fastcgi (1.4-7-ell2.21) unstable; urgency=low
+
+  * added libmagic support
+
+ -- Leonid A. Movsesjan <lmovsesjan@yandex-team.ru>  Tue, 12 Mar 2013 13:57:51 +0400
+
 elliptics-fastcgi (1.4-7-ell2.20) unstable; urgency=low
 
   * Print geobase exceptions as debug messages

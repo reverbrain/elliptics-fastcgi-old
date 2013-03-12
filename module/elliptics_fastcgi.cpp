@@ -323,7 +323,7 @@ EllipticsProxy::onLoad() {
 	base_port_ = config->asInt(path + "/dnet/base-port");
 	write_port_ = config->asInt(path + "/dnet/write-port", 9000);
 	directory_bit_num_ = config->asInt(path + "/dnet/directory-bit-num");
-        eblob_style_path_ = config->asInt(path + "/dnet/eblob_style_path", 0);
+	eblob_style_path_ = config->asInt(path + "/dnet/eblob_style_path", 0);
 
 	replication_count_ = config->asInt(path + "/dnet/replication-count", 0);
 	chunk_size_ = config->asInt(path + "/dnet/chunk_size", 0);
@@ -521,7 +521,7 @@ EllipticsProxy::onLoad() {
 		if (!processor) {
 			log()->error("Embed processor %s doesn't exists in config", config->asString(*it + "/name").c_str());
 		} else {
-	                embed_processors_.push_back(std::make_pair(config->asInt(*it + "/type"), processor));
+			embed_processors_.push_back(std::make_pair(config->asInt(*it + "/type"), processor));
 		}
 	}
 
@@ -574,7 +574,7 @@ EllipticsProxy::downloadInfoHandler(fastcgi::Request *request) {
 
 	ioremap::elliptics::session sess(*elliptics_node_);
 	std::vector<int> groups;
-        std::string path;
+	std::string path;
 	if (!metabase_write_addr_.empty() && !metabase_read_addr_.empty()) {
 		try {
 			groups = getMetaInfo(filename);
@@ -958,14 +958,6 @@ EllipticsProxy::getHandler(fastcgi::Request *request) {
 
 	std::map<std::string, std::string>::iterator it = typemap_.find(extention);
 
-	std::string content_type;
-	if (typemap_.end() == it) {
-		content_type = "application/octet";
-	}
-	else {
-		content_type = it->second;
-	}
-
 	try {
 		sess.set_groups(groups);
 
@@ -1034,7 +1026,7 @@ EllipticsProxy::getHandler(fastcgi::Request *request) {
 				if (e->type > DNET_FCGI_EMBED_TIMESTAMP) {
 					int http_status = 200;
 					bool allowed = true;
-                                        for (size_t i = 0; i < embed_processors_.size(); i++) {
+					for (size_t i = 0; i < embed_processors_.size(); i++) {
 						if (embed_processors_[i].first == e->type) {
 							log()->debug("Found embed processor for type %d", e->type);
 							allowed = embed_processors_[i].second->processEmbed(request, *e, http_status);
@@ -1074,7 +1066,13 @@ EllipticsProxy::getHandler(fastcgi::Request *request) {
 		}
 
 		request->setStatus(200);
-		request->setContentType(content_type);
+
+		if (NULL == magic_.get()) {
+			magic_.reset(new MagicProvider());
+
+			request->setContentType(magic_->type(result));
+		}
+
 		request->setHeader("Content-Length", boost::lexical_cast<std::string>(result.length()));
 		request->setHeader("Last-Modified", ts_str);
 		request->write(result.c_str(), result.size());

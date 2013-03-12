@@ -44,6 +44,7 @@
 
 #include "boost_threaded.hpp"
 #include "embed_processor.hpp"
+#include "magic_provider.hpp"
 
 namespace elliptics {
 
@@ -164,6 +165,7 @@ private:
 	std::set<std::string>                       allow_origin_domains_;
 	std::set<std::string>                       allow_origin_handlers_;
         std::vector<std::pair<uint32_t, EmbedProcessorModuleBase*> > embed_processors_;
+	boost::thread_specific_ptr<MagicProvider>   magic_;
 
 };
 

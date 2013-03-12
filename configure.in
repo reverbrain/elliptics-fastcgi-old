@@ -32,6 +32,7 @@ AM_CONDITIONAL(HAVE_REGIONAL, [false])
 
 AC_CHECK_LIB([crypto], [main])
 AC_CHECK_LIB([curl], [main])
+AC_CHECK_LIB([magic], [main])
 AC_CHECK_HEADERS([fastcgi-elliptics/regional_module.hpp],
 		 [AM_CONDITIONAL(HAVE_REGIONAL, [true]) AC_DEFINE([HAVE_REGIONAL], [1], [Have regional module])])
 
