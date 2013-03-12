@@ -8,7 +8,8 @@ elliptics_fastcgi_la_SOURCES = elliptics_fastcgi.cpp embed_processor.cpp
 elliptics_fastcgi_la_LDFLAGS = -module @VERSION_INFO@ @FASTCGIDAEMON_LIBS@ @ELLIPTICS_LIBS@
 
 if HAVE_REGIONAL
-elliptics_fastcgi_la_LIBS = $(libdir)/fastcgi2/elliptics-regional-module.so
+elliptics_fastcgi_la_LDFLAGS += -Wl,-rpath,$(libdir)/fastcgi2 -L$(libdir)/fastcgi2
+elliptics_fastcgi_la_LIBADD = -lelliptics-regional-module
 endif
 
 AM_CXXFLAGS = -W -Wall -g -O2 -fPIC -std=c++0x
