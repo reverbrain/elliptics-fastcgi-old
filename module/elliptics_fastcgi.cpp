@@ -1069,9 +1069,9 @@ EllipticsProxy::getHandler(fastcgi::Request *request) {
 
 		if (NULL == magic_.get()) {
 			magic_.reset(new MagicProvider());
-
-			request->setContentType(magic_->type(result));
 		}
+
+		request->setContentType(magic_->type(result));
 
 		request->setHeader("Content-Length", boost::lexical_cast<std::string>(result.length()));
 		request->setHeader("Last-Modified", ts_str);
