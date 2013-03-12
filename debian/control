@@ -10,7 +10,8 @@ Build-Depends: debhelper (>= 5),
  elliptics-regional-module (>= 1.1-1),
  pkg-config,
  libcurl4-openssl-dev,
- autoconf (>= 2.52), automake1.9, libtool, libxml2-dev, libboost-thread-dev
+ autoconf (>= 2.52), automake1.9, libtool, libxml2-dev, libboost-thread-dev,
+ libmagic-dev
 Standards-Version: 3.7.2
 
 Package: elliptics-fastcgi
