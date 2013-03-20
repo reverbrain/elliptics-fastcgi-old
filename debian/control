@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 5),
  cmake,
  libfastcgi-daemon2-dev,
  elliptics-dev (>= 2.20), elliptics-dev (<< 2.21),
- elliptics-client (>= 2.20), elliptics-client (<< 2.21)
+ elliptics-client (>= 2.20), elliptics-client (<< 2.21),
  elliptics-regional-module (>= 2),
  pkg-config,
  libcurl4-openssl-dev,
