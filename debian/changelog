@@ -1,10 +1,17 @@
-elliptics-fastcgi (1.4-7-ell2.22) unstable; urgency=low
+elliptics-fastcgi (1.4-10-ell2.20) unstable; urgency=low
+
+  * Using cmake as build system
+  * Try lookup in another group if DNS reverse lookup fails
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Wed, 20 Mar 2013 19:31:32 +0400
+
+elliptics-fastcgi (1.4-9-ell2.20) unstable; urgency=low
 
   * stupid bug
 
  -- Leonid A. Movsesjan <lmovsesjan@yandex-team.ru>  Tue, 12 Mar 2013 18:09:25 +0400
 
-elliptics-fastcgi (1.4-7-ell2.21) unstable; urgency=low
+elliptics-fastcgi (1.4-8-ell2.20) unstable; urgency=low
 
   * added libmagic support
 
