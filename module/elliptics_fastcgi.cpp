@@ -17,6 +17,7 @@
 
 #include "settings.h"
 
+#include <vector>
 #include <sstream>
 
 #include <fcntl.h>
@@ -587,26 +588,48 @@ EllipticsProxy::downloadInfoHandler(fastcgi::Request *request) {
 		groups = getGroups(request);
 	}
 
-	try {
-		sess.set_groups(groups);
-		std::string l = sess.lookup(filename);
+        if (groups.empty()) {
+            log()->error("No groups provided");
+            request->setStatus(500);
+            return;
+        }
 
+	try {
+                std::vector<int> try_groups(groups);
 		std::string result = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
 
-		const void *data = l.data();
+		const void *data;
 
-		struct dnet_addr *addr = (struct dnet_addr *)data;
-		struct dnet_cmd *cmd = (struct dnet_cmd *)(addr + 1);
-		struct dnet_addr_attr *a = (struct dnet_addr_attr *)(cmd + 1);
-		struct dnet_file_info *info = (struct dnet_file_info *)(a + 1);
+		struct dnet_addr *addr;
+		struct dnet_cmd *cmd;
+		struct dnet_addr_attr *a;
+		struct dnet_file_info *info;
 		dnet_convert_file_info(info);
 
-		char hbuf[NI_MAXHOST];
-		memset(hbuf, 0, NI_MAXHOST);
+                char hbuf[NI_MAXHOST];
 
-		if (getnameinfo((const sockaddr*)&a->addr, a->addr.addr_len, hbuf, sizeof (hbuf), NULL, 0, 0) != 0) {
-			throw std::runtime_error("can not make dns lookup");
-		}
+                while (!try_groups.empty()) {
+                    sess.set_groups(try_groups);
+                    std::string l = sess.lookup(filename);
+
+
+                    data = l.data();
+
+                    addr = (struct dnet_addr *)data;
+                    cmd = (struct dnet_cmd *)(addr + 1);
+                    a = (struct dnet_addr_attr *)(cmd + 1);
+                    info = (struct dnet_file_info *)(a + 1);
+                    dnet_convert_file_info(info);
+
+                    memset(hbuf, 0, NI_MAXHOST);
+
+                    if (getnameinfo((const sockaddr*)&a->addr, a->addr.addr_len, hbuf, sizeof (hbuf), NULL, 0, 0) != 0) {
+                        log()->error("Can't make dns lookup");
+                        try_groups.erase(std::remove(try_groups.begin(), try_groups.end(), cmd->id.group_id), try_groups.end());
+                    } else {
+                        break;
+                    }
+                }
 
 		int port = dnet_server_convert_port((struct sockaddr *)a->addr.addr, a->addr.addr_len);
 
@@ -618,8 +641,6 @@ EllipticsProxy::downloadInfoHandler(fastcgi::Request *request) {
 
 		dnet_dump_id_len_raw(eid.id, DNET_ID_SIZE, id);
 		file_backend_get_dir(eid.id, directory_bit_num_, hex_dir);
-
-		sess.set_groups(groups_);
 
 		std::string region = "-1";
 		std::string ip = request->hasHeader("X-Real-IP") ? request->getHeader("X-Real-IP") : request->getRemoteAddr();
