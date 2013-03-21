@@ -1,3 +1,9 @@
+elliptics-fastcgi (1.4-11-ell2.20) unstable; urgency=low
+
+  * Use timestamp with milliceconds in signature generation
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Thu, 21 Mar 2013 18:57:22 +0400
+
 elliptics-fastcgi (1.4-10-ell2.20) unstable; urgency=low
 
   * Using cmake as build system
