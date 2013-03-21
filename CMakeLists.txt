@@ -26,7 +26,9 @@ set(REQUIRED_LIBRARIES
 SET(HAVE_REGIONAL false)
 IF(WITH_REGIONAL_MODULE)
     SET(HAVE_REGIONAL true)
-    FIND_LIBRARY(REGIONAL_MODULE names elliptics-regional-module PATHS ${CMAKE_INSTALL_PREFIX}/lib/fastcgi2)
+    FIND_LIBRARY(REGIONAL_MODULE
+                NAMES elliptics-regional-module.so
+                PATHS ${CMAKE_INSTALL_PREFIX}/lib/fastcgi2)
 
     IF(${REGIONAL_MODULE} STREQUAL "REGIONAL_MODULE-NOTFOUND")
         SET(HAVE_REGIONAL false)
