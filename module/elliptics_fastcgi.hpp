@@ -33,11 +33,6 @@
 #include <fastcgi-elliptics/regional_module.hpp>
 #endif /* HAVE_REGIONAL */
 
-#ifdef HAVE_METABASE
-#include <zmq.hpp>
-#include <msgpack.hpp>
-#endif /* HAVE_METABASE */
-
 #include <boost/tokenizer.hpp>
 
 #include <elliptics/cppdef.h>
@@ -47,21 +42,6 @@
 #include "magic_provider.hpp"
 
 namespace elliptics {
-
-#ifdef HAVE_METABASE
-struct MetabaseRequest {
-	int		groups_num;
-	uint64_t	stamp;
-	std::vector<uint8_t> id;
-	MSGPACK_DEFINE(groups_num, stamp, id);
-};
-
-struct MetabaseResponse {
-	std::vector<int> groups;
-	uint64_t	stamp;
-	MSGPACK_DEFINE(groups, stamp);
-};
-#endif /* HAVE_METABASE */
 
 class EllipticsProxy;
 
@@ -115,10 +95,6 @@ private:
 
 	std::pair<std::string, uint64_t> secret(fastcgi::Request *request) const;
 
-#ifdef HAVE_METABASE
-	std::vector<int> getMetabaseGroups(fastcgi::Request *request, size_t count, struct dnet_id &id);
-#endif /* HAVE_METABASE */
-
 public:
 	virtual void onLoad();
 	virtual void onUnload();
@@ -130,13 +106,6 @@ private:
 #ifdef HAVE_REGIONAL
 	RegionalModule*                             regional_module_;
 #endif /* HAVE_REGIONAL */
-#ifdef HAVE_METABASE
-	std::auto_ptr<zmq::context_t>               metabase_context_;
-	std::auto_ptr<zmq::socket_t>                metabase_socket_;
-	int                                         metabase_timeout_;
-	int                                         metabase_usage_;
-	uint64_t                                    metabase_current_stamp_;
-#endif /* HAVE_METABASE */
 	boost::shared_ptr<ioremap::elliptics::file_logger>  elliptics_log_;
 	boost::shared_ptr<ioremap::elliptics::node>      elliptics_node_;
 	std::map<std::string, std::string>          typemap_;

@@ -1,3 +1,9 @@
+elliptics-fastcgi (1.4-12-ell2.20) unstable; urgency=low
+
+  * Removed metabase functionality from proxy
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Thu, 21 Mar 2013 19:17:16 +0400
+
 elliptics-fastcgi (1.4-11-ell2.20) unstable; urgency=low
 
   * Use timestamp with milliceconds in signature generation

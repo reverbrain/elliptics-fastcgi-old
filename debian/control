@@ -3,16 +3,19 @@ Section: net
 Priority: extra
 Maintainer: Leonid A. Movsesjan <lmovsesjan@yandex-team.ru>
 Build-Depends: debhelper (>= 5),
+ pkg-config,
  cdbs,
  cmake,
+ libboost-dev,
+ libboost-system-dev,
+ libboost-thread-dev,
+ libxml2-dev,
+ libcurl4-openssl-dev,
+ libmagic-dev,
  libfastcgi-daemon2-dev,
  elliptics-dev (>= 2.20), elliptics-dev (<< 2.21),
  elliptics-client (>= 2.20), elliptics-client (<< 2.21),
- elliptics-regional-module (>= 2),
- pkg-config,
- libcurl4-openssl-dev,
- libmagic-dev,
- libxml2-dev, libboost-thread-dev
+ elliptics-regional-module (>= 2)
 Standards-Version: 3.7.2
 
 Package: elliptics-fastcgi

@@ -23,23 +23,6 @@ set(REQUIRED_LIBRARIES
                       ${Boost_SYSTEM_LIBRARY}
                       ${Boost_THREAD_LIBRARY})
 
-SET(HAVE_METABASE false)
-IF(WITH_METABASE)
-    SET(HAVE_METABASE true)
-    FIND_LIBRARY(DEALER NAMES cocaine-dealer)
-
-    IF(${DEALER} STREQUAL "DEALER-NOTFOUND")
-        SET(HAVE_METABASE false)
-    ENDIF()
-
-    IF(HAVE_METABASE)
-        SET(REQUIRED_LIBRARIES 
-			${REQUIRED_LIBRARIES}
-			${DEALER})
-    ENDIF()
-message("Metabase: ${HAVE_METABASE} ${DEALER}")
-ENDIF()
-
 SET(HAVE_REGIONAL false)
 IF(WITH_REGIONAL_MODULE)
     SET(HAVE_REGIONAL true)

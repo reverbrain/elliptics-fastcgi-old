@@ -1,2 +1,1 @@
-#cmakedefine HAVE_METABASE
 #cmakedefine HAVE_REGIONAL
