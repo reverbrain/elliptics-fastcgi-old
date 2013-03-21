@@ -20,6 +20,7 @@ find_package(Boost COMPONENTS system thread REQUIRED)
 set(REQUIRED_LIBRARIES
                       elliptics_cpp
                       curl
+                      magic
                       ${Boost_SYSTEM_LIBRARY}
                       ${Boost_THREAD_LIBRARY})
 
