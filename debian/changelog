@@ -1,3 +1,9 @@
+elliptics-fastcgi (1.4-13-ell2.20) unstable; urgency=low
+
+  * Fixed regional module library search
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Thu, 21 Mar 2013 19:31:30 +0400
+
 elliptics-fastcgi (1.4-12-ell2.20) unstable; urgency=low
 
   * Removed metabase functionality from proxy
