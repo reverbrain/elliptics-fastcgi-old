@@ -563,10 +563,10 @@ EllipticsProxy::downloadInfoHandler(fastcgi::Request *request) {
 
 		const void *data;
 
-		struct dnet_addr *addr;
-		struct dnet_cmd *cmd;
-		struct dnet_addr_attr *a;
-		struct dnet_file_info *info;
+		struct dnet_addr *addr = NULL;
+		struct dnet_cmd *cmd = NULL;
+		struct dnet_addr_attr *a = NULL;
+		struct dnet_file_info *info = NULL;
 		dnet_convert_file_info(info);
 
                 char hbuf[NI_MAXHOST];
@@ -592,6 +592,17 @@ EllipticsProxy::downloadInfoHandler(fastcgi::Request *request) {
                     } else {
                         break;
                     }
+                }
+
+                if (try_groups.empty()) {
+                    log()->error("Could not find file %s", filename.c_str());
+                    throw std::runtime_error("Could not find file");
+                }
+
+                if (a == NULL || info == NULL || info->size == 0) {
+                    log()->error("BUG IS HERE!!!! a = 0x%lx, info = 0x%lx, info->offset = %ld, info->size = %ld",
+                            (unsigned long)a, (unsigned long)info, (unsigned long)info->offset, (unsigned long)info->size);
+                    throw std::runtime_error("BUG IS HERE!!!!");
                 }
 
 		int port = dnet_server_convert_port((struct sockaddr *)a->addr.addr, a->addr.addr_len);

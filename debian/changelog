@@ -1,3 +1,9 @@
+elliptics-fastcgi (1.4-15-ell2.20) unstable; urgency=low
+
+  * Added more debug info to catch bug
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Fri, 22 Mar 2013 16:55:52 +0400
+
 elliptics-fastcgi (1.4-14-ell2.20) unstable; urgency=low
 
   * Link with libmagic
