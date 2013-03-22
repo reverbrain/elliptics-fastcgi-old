@@ -13,8 +13,8 @@ Build-Depends: debhelper (>= 5),
  libcurl4-openssl-dev,
  libmagic-dev,
  libfastcgi-daemon2-dev,
- elliptics-dev (>= 2.20), elliptics-dev (<< 2.21),
- elliptics-client (>= 2.20), elliptics-client (<< 2.21),
+ elliptics-dev (>= 2.20), elliptics-dev (<< 2.20.3),
+ elliptics-client (>= 2.20), elliptics-client (<< 2.20.3),
  eblob,
  elliptics-regional-module (>= 2),
  elliptics-regional-module-dev (>= 2)
@@ -26,7 +26,7 @@ Depends: ${shlibs:Depends},
  libfastcgi2-syslog,
  elliptics-regional-module (>= 2),
  fastcgi-daemon2,
- elliptics-client (>= 2.20), elliptics-client (<< 2.21)
+ elliptics-client (>= 2.20), elliptics-client (<< 2.20.3)
 Description: Elliptics is one of the best prodution enterprise high scalability and availability system, wrote by one
  of the most genius software developers of the whole World. This is just a shitty FastCGI proxy for Elliptics, wrote
  by the dick from the mountain.
