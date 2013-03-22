@@ -1,3 +1,9 @@
+elliptics-fastcgi (1.4-17-ell2.20.2) unstable; urgency=low
+
+  * Fixed bug in download-info
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Fri, 22 Mar 2013 19:58:14 +0400
+
 elliptics-fastcgi (1.4-16-ell2.20.2) unstable; urgency=low
 
   * Removed unnecessary convert_file_info, possible it causes a bug

@@ -569,10 +569,11 @@ EllipticsProxy::downloadInfoHandler(fastcgi::Request *request) {
 		struct dnet_file_info *info = NULL;
 
                 char hbuf[NI_MAXHOST];
+                std::string l;
 
                 while (!try_groups.empty()) {
                     sess.set_groups(try_groups);
-                    std::string l = sess.lookup(filename);
+                    l = sess.lookup(filename);
 
 
                     data = l.data();
