@@ -1,3 +1,9 @@
+elliptics-fastcgi (1.4-16-ell2.20.2) unstable; urgency=low
+
+  * Removed unnecessary convert_file_info, possible it causes a bug
+
+ -- Anton Kortunov <toshik@yandex-team.ru>  Fri, 22 Mar 2013 17:59:53 +0400
+
 elliptics-fastcgi (1.4-15-ell2.20.2) unstable; urgency=low
 
   * Special version with elliptics 2.20.2 support

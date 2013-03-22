@@ -567,7 +567,6 @@ EllipticsProxy::downloadInfoHandler(fastcgi::Request *request) {
 		struct dnet_cmd *cmd = NULL;
 		struct dnet_addr_attr *a = NULL;
 		struct dnet_file_info *info = NULL;
-		dnet_convert_file_info(info);
 
                 char hbuf[NI_MAXHOST];
 
