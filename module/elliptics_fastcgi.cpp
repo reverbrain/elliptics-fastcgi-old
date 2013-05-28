@@ -953,6 +953,11 @@ EllipticsProxy::getHandler(fastcgi::Request *request) {
 
 	std::map<std::string, std::string>::iterator it = typemap_.find(extention);
 
+	std::string content_type;
+	if (it != typemap_.end()) {
+		content_type = it->second;
+	}
+
 	try {
 		sess.set_groups(groups);
 
@@ -1062,11 +1067,14 @@ EllipticsProxy::getHandler(fastcgi::Request *request) {
 
 		request->setStatus(200);
 
-		if (NULL == magic_.get()) {
-			magic_.reset(new MagicProvider());
+		if (content_type.empty()) {
+			if (NULL == magic_.get()) {
+				magic_.reset(new MagicProvider());
+			}
+			content_type = magic_->type(result);
 		}
 
-		request->setContentType(magic_->type(result));
+		request->setContentType(content_type);
 
 		request->setHeader("Content-Length", boost::lexical_cast<std::string>(result.length()));
 		request->setHeader("Last-Modified", ts_str);
